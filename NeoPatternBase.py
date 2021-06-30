@@ -1,17 +1,26 @@
 import neopixel
 import time
-import abc
-from abc import ABC, abstractmethod, abstractproperty
 
-PIXEL_OFF = (0, 0, 0)
 DEFAULT_BRIGHTNESS = 0.1
+
 
 class Direction(object):
     FORWARD = 0
     REVERSE = 1
 
 
-class NeoPatternBase(ABC):
+class Colors(object):
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
+    WHITE = (0, 0, 0, 255)
+    CYAN = (0, 255, 255)
+    MAGENTA = (255, 0, 255)
+    YELLOW = (255, 255, 0)
+    OFF = (0, 0, 0)
+
+
+class NeoPatternBase(object):
     @property
     def num_pixels(self):
         """
@@ -128,11 +137,16 @@ class NeoPatternBase(ABC):
 
 
     # class constructor
-    @abstractmethod
-    def __init__(self, neopixel: neopixel, callback, brightness=DEFAULT_BRIGHTNESS):
+    #@abstractmethod
+    def __init__(self, neopixel: neopixel, callback, brightness=DEFAULT_BRIGHTNESS, direction=Direction.FORWARD):
         self._neopixel = neopixel
+        self._interval = 0
+        self._color_1 = 0
+        self._color_2 = 0
+        self._total_steps = 0
         self.set_brightness(brightness)
         self._on_complete = callback
+        self._direction = direction
         self.reset()
 
 
@@ -166,7 +180,7 @@ class NeoPatternBase(ABC):
         else:
             self._index -= 1
             if self._index <= 0:
-                self._index = (self._total_steps - 1)
+                self._index = self._total_steps
                 self._on_complete()
 
 
@@ -174,12 +188,15 @@ class NeoPatternBase(ABC):
         """
         Increments pattern and displays changes
         """
-        self._update_pattern()
-        self._neopixel.show()
-        self._increment()
+        self._current_time = NeoPatternBase._millis()
+
+        if self._current_time >= (self._last_update + self._interval):
+            self._last_update = self._current_time
+            self._update_pattern()
+            self._neopixel.show()
+            self._increment()
 
 
-    @abstractmethod
     def _update_pattern(self):
         pass
 
@@ -190,23 +207,20 @@ class NeoPatternBase(ABC):
         """
         self.clear()
         self._last_update = NeoPatternBase._millis()
-        self._interval = 0
         self._current_time = 0
-        #self._color_1 = 0
-        #self._color_2 = 0
-        self._total_steps = 0
         self._index = 0
         self.set_brightness(DEFAULT_BRIGHTNESS)
-        self._direction = Direction.FORWARD
 
 
     def reverse(self):
         """
         Reverse direction of the pattern
         """
+        self.reset()
+
         if self._direction == Direction.FORWARD:
             self._direction = Direction.REVERSE
-            self._index = self._total_steps - 1
+            self._index = self._total_steps
         else:
             self._direction = Direction.FORWARD
             self._index = 0
@@ -226,7 +240,8 @@ class NeoPatternBase(ABC):
         """
         Turn all pixels off
         """
-        self.color_set(PIXEL_OFF)
+        self.color_set(Colors.OFF)
+        self._neopixel.show()
 
 
     def has_white(self) -> bool:
@@ -234,6 +249,24 @@ class NeoPatternBase(ABC):
         Returns true if NeoPixel was initialized with RGBW
         """
         return True if self._neopixel.bpp == 4 and "W" in self._neopixel.byteorder else False
+
+
+    # Indexer methods
+    def __setitem__(self, index, val):
+        if self._neopixel is not None and index < self.num_pixels:
+            if isinstance(val, int):
+                self._neopixel[index] = (NeoPatternBase.red(val),
+                                         NeoPatternBase.green(val),
+                                         NeoPatternBase.blue(val))
+            elif isinstance(val, tuple):
+                self._neopixel[index] = val
+
+
+    def __getitem__(self, index):
+        if self._neopixel is not None and index >= 0 and index < self.num_pixels:
+            return self._neopixel[index]
+        else:
+            return (0, 0, 0)
 
 
     @classmethod
