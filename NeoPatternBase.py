@@ -137,7 +137,6 @@ class NeoPatternBase(object):
 
 
     # class constructor
-    #@abstractmethod
     def __init__(self, neopixel: neopixel, callback, brightness=DEFAULT_BRIGHTNESS, direction=Direction.FORWARD):
         self._neopixel = neopixel
         self._interval = 0
@@ -201,22 +200,24 @@ class NeoPatternBase(object):
         pass
 
 
-    def reset(self):
+    def reset(self, clear_pixels=True):
         """
         Reset pattern to initial state
         """
-        self.clear()
+        if clear_pixels:
+            self.clear()
+
         self._last_update = NeoPatternBase._millis()
         self._current_time = 0
         self._index = 0
         self.set_brightness(DEFAULT_BRIGHTNESS)
 
 
-    def reverse(self):
+    def reverse(self, clear_pixels=True):
         """
         Reverse direction of the pattern
         """
-        self.reset()
+        self.reset(clear_pixels)
 
         if self._direction == Direction.FORWARD:
             self._direction = Direction.REVERSE
@@ -226,14 +227,15 @@ class NeoPatternBase(object):
             self._index = 0
 
 
-    def color_set(self, color: tuple[int, int, int]):
+    def color_set(self, color: tuple[int, int, int], auto_write=False):
         """
         Set all pixels to a color (synchronously)
         """
         for i in range(self._neopixel.n):
             self._neopixel[i] = color
         
-        self._neopixel.show()
+        if auto_write:
+            self._neopixel.show()
 
 
     def clear(self):
