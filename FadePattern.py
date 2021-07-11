@@ -29,4 +29,3 @@ class FadePattern(NeoPatternBase):
         blue = ((self.color_1[2] * (steps - idx)) + (self.color_2[2] * idx)) / steps
 
         self.color_set((red, green, blue))
-        print("Color: " + str((red, green, blue)))

@@ -37,7 +37,7 @@ class NeoPatternBase(object):
 
     @idx.setter
     def idx(self, value):
-        self._index = min(max(value, 0), self.num_pixels)
+        self._index = value
 
     @property
     def interval(self):
