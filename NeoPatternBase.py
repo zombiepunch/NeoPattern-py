@@ -175,12 +175,12 @@ class NeoPatternBase(object):
             self._index += 1
             if self._index >= self._total_steps:
                 self._index = 0
-                self._on_complete()
+                self._on_complete(self)
         else:
             self._index -= 1
             if self._index <= 0:
                 self._index = self._total_steps
-                self._on_complete()
+                self._on_complete(self)
 
 
     def update(self):
